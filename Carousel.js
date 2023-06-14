@@ -27,9 +27,15 @@ class Carousel{
             navigation : true,
             infinite : false
         },options);
+        if (this.options.loop && this.options.infinite) {
+            alert("un carousel ne peut être a la fois en boucle et a l\'infinie, mettez l'option loup ou infinite a false")
+            throw new Error("un carousel ne peut être a la fois en boucle et a l\'infinie, mettez l'option loup ou infinite a false")
+        }
         let children = [].slice.call(element.children) 
         this.isMobile = false
         this.currentItems = 0;
+        this.moveCallbacks = []; 
+        this.offset = 0;
 
         this.root = this.createDivWithClass('carousele')
         this.root.setAttribute('tabindex','0')
@@ -42,11 +48,22 @@ class Carousel{
         this.items =children.map(child => {
             let item = this.createDivWithClass('carousel__item')
             item.appendChild(child)
-            this.container.appendChild(item)
+            /* this.container.appendChild(item) */
             return item
         });
+        if (this.options.infinite) {
+            //this.offset = this.options.slidesVisible * 2;
+            this.offset = this.options.slidesVisible + this.options.slidesToScroll;
+            this.items = [
+                ...this.items.slice(this.items.length - this.offset).map(item =>item.cloneNode(true)),
+                ...this.items,
+                ...this.items.slice(0, this.offset).map(item =>item.cloneNode(true))
+            ]   
+           this.gotoItem(this.offset,false)
+        }
+        this.items.forEach(item=>this.container.appendChild(item))
         
-        this.moveCallbacks = []; 
+       
         this.setStyle()
         if (this.options.navigation) {
             this.createNavigation();
@@ -56,7 +73,7 @@ class Carousel{
         }
         //evenement
 
-        this.moveCallbacks.forEach(cb=>cb(0))
+        this.moveCallbacks.forEach(cb=>cb(this.currentItems))
         this.onWindowResize();
         window.addEventListener('resize',this.onWindowResize.bind(this))
         this.root.addEventListener('keyup',e=>{
@@ -66,6 +83,9 @@ class Carousel{
                 this.prev();
             }
         })
+        if (this.options.infinite) {
+            this.container.addEventListener('transitionend',this.resetInfinit.bind(this))
+        }
 
     }
     /**
@@ -130,14 +150,15 @@ class Carousel{
         let pagination = this.createDivWithClass('carousel__pagination')
         let buttons = [];
         this.root.appendChild(pagination)
-        for (let i = 0; i < this.items.length; i = i + this.options.slidesToScroll) {
+        let itemsLength = this.items.length - 2*this.offset
+        for (let i = 0; i < itemsLength; i = i + this.options.slidesToScroll) {
             let button = this.createDivWithClass('carousel__pagination__button')
-            button.addEventListener('click',()=>this.gotoItem(i))
+            button.addEventListener('click',()=>this.gotoItem(i + this.offset))
             pagination.appendChild(button)
             buttons.push(button)
         }
         this.onMove(index=>{
-            let activeButton = buttons[Math.floor(index /this.options.slidesToScroll)]
+            let activeButton = buttons[Math.floor(((index -this.offset)%itemsLength) /this.options.slidesToScroll)]
             if (activeButton) {
                 buttons.forEach(button=> button.classList.remove('carousel__pagination__button--active'))
                 activeButton.classList.add('carousel__pagination__button--active')
@@ -145,8 +166,7 @@ class Carousel{
         })
     }
     next(){
-        this.gotoItem(this.currentItems + this.slidesToScroll)
-        
+        this.gotoItem(this.currentItems + this.slidesToScroll)    
     }
     prev(){
         this.gotoItem(this.currentItems - this.slidesToScroll)
@@ -155,9 +175,10 @@ class Carousel{
      * Description : 
      * Deplace le carousel vers l'element ciblé
      * @param {number} index - numero de l'element ciblé qui doit etre visible
+     * @param {boolean} [animation = true ] - dois ou pas faire de transition sur les transforms
      * @returns {any}
      */
-    gotoItem(index){   
+    gotoItem(index,animation = true){   
         if (index < 0) {
             if(this.options.loop){
                 index  = this.items.length - this.slidesVisible
@@ -172,10 +193,32 @@ class Carousel{
             }
         }
         
-        let translateX = index * -100/ this.items.length
-        this.container.style.transform='translate3d('+translateX+'%,0,0)'
-        this.currentItems = index; 
-        this.moveCallbacks.forEach(cb=>cb(index))
+        let translateX = index * -100/ this.items.length;
+        if (animation === false) {
+            this.container.style.transition = 'none'
+        }
+        this.container.style.transform='translate3d('+translateX+'%,0,0)';
+        /*On recuper ce offsetHeight ci dessous, meme si ça ne va pas nous servir juste pour obliger le navigateur a reconstruire l'element et au final de ne pas mettre une animation si animation=false*/
+        this.container.offsetHeight 
+        if (animation === false) {
+            this.container.style.transition = ''
+        }
+        this.currentItems = index;   
+        this.moveCallbacks.forEach(cb=>cb(index)) 
+    }
+    /**
+     * Elle va Deplacer le container pour donner l'impression d'un slide infinie
+     */
+    resetInfinit(){
+        /**
+         * 1 2 3 4 5 6 7 
+         * 3 4 5 6 7  | 1 2 3 4 5 6 7 | 1 2 3 4 5
+         */
+        if (this.currentItems <= this.options.slidesToScroll) {
+            this.gotoItem(this.currentItems + (this.items.length - 2 * this.offset),false)   
+        }else if(this.currentItems >= this.items.length-this.offset){
+            this.gotoItem(this.currentItems - (this.items.length - 2 * this.offset),false)  
+        }
     }
     /**
      * Description
@@ -210,15 +253,17 @@ class Carousel{
 document.addEventListener('DOMContentLoaded',()=>{
     new Carousel(document.getElementById('carousel'),{
         slidesToScroll : 2,
-        slidesVisible : 3,
-        loop : false,
-        pagination:true
+        slidesVisible : 2,
+        loop : true,
+        pagination:true,
+        infinite:true,
     })
     new Carousel(document.getElementById('carousel2'),{
         slidesToScroll : 1,
-        slidesVisible : 2,
-        loop : true,
-        infinite:true
+        slidesVisible : 1, 
+        infinite:true,
+        loop : false,
+        pagination:true
 
     }) 
 })
