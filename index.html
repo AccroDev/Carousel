@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carousel</title>
+</head>
+<body>
+    <div class="container" id="carousel">
+        <div class="child"><div>1</div></div>
+        <div class="child"><div>2</div></div>
+        <div class="child"><div>3</div></div>
+        <div class="child"><div>4</div></div>
+        <div class="child"><div>5</div></div>
+    </div>
+    <div class="container" id="carousel2">
+        <div class="child"><div>1</div></div>
+        <div class="child"><div>2</div></div>
+        <div class="child"><div>3</div></div>
+        <div class="child"><div>4</div></div>
+        <div class="child"><div>5</div></div>
+        <div class="child"><div>6</div></div>
+        <div class="child"><div>7</div></div>
+        <div class="child"><div>8</div></div>
+        <div class="child"><div>9</div></div>
+    </div>
+    <style>
+        *{
+            box-sizing: border-box;
+            margin: 0;
+        }
+        .container .child{ 
+                height: 300px;
+                background-color: aquamarine;
+                margin: 2px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 18px;
+                font-weight: 800;
+                font-family: sans-serif;
+        }
+        /* carousel */
+        .carousele{
+            position: relative;
+            overflow: hidden;
+        }
+        .carousel__container{
+            transform: translate3d(0,0,0);
+            transition: transform 0.3s;
+        }
+        .carousel__container::after{
+            content: '';
+            clear: both;
+            display: table;
+        }
+        .carousel__item{
+            float: left;
+        }
+        .carousel__next,.carousel__prev{
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            margin-top: -20px;
+            right:5px ;
+            box-shadow: 0 15px 35px #3232321a ,0 5px 15px #0000001a;
+            cursor: pointer;
+            transition: transform 0.3s,opacity 0.3s;
+        }
+        .carousel__prev--hidden,.carousel__next--hidden{
+            opacity: 0;
+        }
+        .carousel__next:hover,.carousel__prev:hover{
+            transform: scale(1.2);
+        }
+        .carousel__prev{
+            right: auto;
+            left: 5px;
+        }
+        .carousel__pagination{
+            position: absolute;
+            bottom: 0;
+            left: 0%;
+            right: 0;
+            text-align: center;
+            display: none;
+        }
+        .carousel__pagination__button{
+            background-color: white;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 3px;
+            box-shadow: 0 2px 5px #3232321a;
+            transition : transform 0.3s;
+            cursor: pointer;
+        }
+        .carousel__pagination__button--active,.carousel__pagination__button:hover{
+            transform: scale(1.4);
+        }
+        @media screen and (min-width:800px){
+            .carousel__pagination{
+                display: block;
+            }
+        }
+    </style>
+    <script src="Carousel.js" defer ></script>
+
+</body>
+</html>
